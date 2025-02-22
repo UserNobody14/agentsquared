@@ -1,7 +1,7 @@
 import typer
 from langchain_community.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
-
+import os
 from phoenix.otel import register
 
 tracer_provider = register(
@@ -112,10 +112,19 @@ if __name__ == "__main__":
     app.run()
 
 """
+    # Create the projectname folder if it doesn't exist
+    os.makedirs(projectname, exist_ok=True)
 
-    # Save to file
-    with open(f"{projectname}.py", "w") as f:
+    # Save to file inside projectname folder
+    with open(f"{projectname}/main.py", "w") as f:
         f.write(marimo_content)
+
+    # Open up the projectname folder & run "marimo edit main.py"
+    import subprocess
+
+    # Navigate to the projectname directory
+    os.chdir(projectname)
+    subprocess.run(["marimo", "edit", "main.py"])
 
 
 def mainx():
