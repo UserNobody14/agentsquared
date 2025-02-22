@@ -2,6 +2,13 @@ import typer
 from langchain_community.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 
+from phoenix.otel import register
+
+tracer_provider = register(
+    project_name="coreapp",  # Default is 'default'
+    endpoint="http://localhost:6006/v1/traces",
+)
+
 # from langchain.chains import LLMChain
 from langchain.schema import StrOutputParser
 
@@ -70,21 +77,40 @@ def main(prompt: str, apikey: str, projectname: str):
     )
 
     # Combine sections into a marimo file
-    marimo_content = f"""import marimo as mo
-import openai
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
+    marimo_content = f"""
+import marimo
 
-__generated__ = True
+__generated_with = "0.11.8"
+app = marimo.App(width="medium")
 
-# Input Section
+
+@app.cell
+def _():
+    from phoenix.otel import register
+
+    tracer_provider = register(
+      project_name="appname", # Default is 'default'
+      endpoint="http://localhost:6006/v1/traces",
+    )
+    return register, tracer_provider
+
+
+@app.cell
+def _(tracer_provider):
+    from openinference.instrumentation.langchain import LangChainInstrumentor
+
+    LangChainInstrumentor().instrument(tracer_provider=tracer_provider)
+    return (LangChainInstrumentor,)
+
 {input_section}
 
-# Analysis Section
 {analysis_section}
 
-# Output Section
 {output_section}
+
+if __name__ == "__main__":
+    app.run()
+
 """
 
     # Save to file

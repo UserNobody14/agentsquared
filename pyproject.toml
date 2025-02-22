@@ -6,11 +6,20 @@ authors = [
     { name = "Benjamin Sobel", email = "ben-developer@opayq.com" }
 ]
 dependencies = [
-    "marimo>=0.11.8",
+    "langchain>=0.2.11",
+    "langchain-experimental>=0.0.63",
+    "langchain-community>=0.2.10",
+    "langchain-google-vertexai>=1.0.7",
+    "langgraph>=0.1.16",
+    "openinference-instrumentation-langchain>=0.1.33",
+    "opentelemetry-api>=1.25.0",
+    "opentelemetry-exporter-otlp>=1.25.0",
+    "opentelemetry-proto>=1.25.0",
+    "opentelemetry-sdk>=1.25.0",
+    "opentelemetry-semantic-conventions>=0.46b0",
+    "arize-phoenix-otel==0.8.0",
+    "langchain-openai>=0.3.6",
     "typer>=0.15.1",
-    "openai>=1.63.2",
-    "langchain>=0.3.19",
-    "langchain-community>=0.3.18",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
@@ -21,7 +30,9 @@ build-backend = "hatchling.build"
 
 [tool.rye]
 managed = true
-dev-dependencies = []
+dev-dependencies = [
+    "marimo>=0.11.8",
+]
 
 [project.scripts]
 sobelgen = "agent2:mainx"
