@@ -1,3 +1,3 @@
-# hackathonmarimo
+# agent2
 
 Describe your project here.

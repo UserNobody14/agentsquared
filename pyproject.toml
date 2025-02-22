@@ -1,5 +1,5 @@
 [project]
-name = "hackathonmarimo"
+name = "agent2"
 version = "0.1.0"
 description = "Add your description here"
 authors = [
@@ -23,8 +23,11 @@ build-backend = "hatchling.build"
 managed = true
 dev-dependencies = []
 
+[project.scripts]
+sobelgen = "agent2:mainx"
+
 [tool.hatch.metadata]
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/hackathonmarimo"]
+packages = ["src/agent2"]

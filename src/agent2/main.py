@@ -24,7 +24,11 @@ def create_marimo_section(llm, template, **kwargs):
     """Helper function to generate each section of the marimo notebook"""
     prompt = ChatPromptTemplate.from_template(template)
     chain = prompt | llm | StrOutputParser()
-    return chain.invoke(kwargs)
+    response = chain.invoke(kwargs)
+
+    # Strip out markdown code block markers if present
+    cleaned_code = response.replace("```python", "").replace("```", "").strip()
+    return cleaned_code
 
 
 def main(prompt: str, apikey: str, projectname: str):
@@ -86,6 +90,10 @@ __generated__ = True
     # Save to file
     with open(f"{projectname}.py", "w") as f:
         f.write(marimo_content)
+
+
+def mainx():
+    typer.run(main)
 
 
 if __name__ == "__main__":

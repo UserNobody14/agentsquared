@@ -71,10 +71,10 @@ jsonpatch==1.33
 jsonpointer==3.0.0
     # via jsonpatch
 langchain==0.3.19
-    # via hackathonmarimo
+    # via agent2
     # via langchain-community
 langchain-community==0.3.18
-    # via hackathonmarimo
+    # via agent2
 langchain-core==0.3.37
     # via langchain
     # via langchain-community
@@ -86,7 +86,7 @@ langsmith==0.3.10
     # via langchain-community
     # via langchain-core
 marimo==0.11.8
-    # via hackathonmarimo
+    # via agent2
 markdown==3.7
     # via marimo
     # via pymdown-extensions
@@ -107,7 +107,7 @@ numpy==2.2.3
     # via langchain
     # via langchain-community
 openai==1.63.2
-    # via hackathonmarimo
+    # via agent2
 orjson==3.10.15
     # via langsmith
 packaging==24.2
@@ -176,7 +176,7 @@ tomlkit==0.13.2
 tqdm==4.67.1
     # via openai
 typer==0.15.1
-    # via hackathonmarimo
+    # via agent2
 typing-extensions==4.12.2
     # via anyio
     # via langchain-core
