@@ -1,0 +1,1893 @@
+# Chat
+
+!!! tip "Looking for example notebooks?"
+    For example notebooks, check out [`examples/ai/chat` on our
+    GitHub](https://github.com/marimo-team/marimo/tree/main/examples/ai/chat).
+
+/// marimo-embed
+    size: large
+
+```python
+@app.cell
+def __():
+    def simple_echo_model(messages, config):
+        return f"You said: {messages[-1].content}"
+
+    mo.ui.chat(
+        simple_echo_model,
+        prompts=["Hello", "How are you?"],
+        show_configuration_controls=True
+    )
+    return
+```
+
+///
+
+The chat UI element provides an interactive chatbot interface for
+conversations. It can be customized with different models, including built-in
+AI models from popular providers or custom functions.
+
+::: marimo.ui.chat
+
+## Basic Usage
+
+Here's a simple example using a custom echo model:
+
+```python
+import marimo as mo
+
+def echo_model(messages, config):
+    return f"Echo: {messages[-1].content}"
+
+chat = mo.ui.chat(echo_model, prompts=["Hello", "How are you?"])
+chat
+```
+
+Here, `messages` is a list of [`ChatMessage`][marimo.ai.ChatMessage] objects,
+which has `role` (`"user"`, `"assistant"`, or `"system"`) and `content` (the
+message string) attributes; `config` is a
+[`ChatModelConfig`][marimo.ai.ChatModelConfig] object with various
+configuration parameters, which you are free to ignore.
+
+## Using a Built-in AI Model
+
+You can use marimo's built-in AI models, such as OpenAI's GPT:
+
+```python
+import marimo as mo
+
+chat = mo.ui.chat(
+    mo.ai.llm.openai(
+        "gpt-4",
+        system_message="You are a helpful assistant.",
+    ),
+    show_configuration_controls=True
+)
+chat
+```
+
+## Accessing Chat History
+
+You can access the chat history using the `value` attribute:
+
+```python
+chat.value
+```
+
+This returns a list of [`ChatMessage`][marimo.ai.ChatMessage] objects, each
+containing `role`, `content`, and optional `attachments` attributes.
+
+::: marimo.ai.ChatMessage
+
+## Custom Model with Additional Context
+
+Here's an example of a custom model that uses additional context:
+
+```python
+import marimo as mo
+
+def rag_model(messages, config):
+    question = messages[-1].content
+    docs = find_relevant_docs(question)
+    context = "\n".join(docs)
+    prompt = f"Context: {context}\n\nQuestion: {question}\n\nAnswer:"
+    response = query_llm(prompt, config)
+    return response
+
+mo.ui.chat(rag_model)
+```
+
+This example demonstrates how you can implement a Retrieval-Augmented
+Generation (RAG) model within the chat interface.
+
+## Templated Prompts
+
+You can pass sample prompts to `mo.ui.chat` to allow users to select from a
+list of predefined prompts. By including a `{{var}}` in the prompt, you can
+dynamically insert values into the prompt; a form will be generated to allow
+users to fill in the variables.
+
+```python
+mo.ui.chat(
+    mo.ai.llm.openai("gpt-4o"),
+    prompts=[
+        "What is the capital of France?",
+        "What is the capital of Germany?",
+        "What is the capital of {{country}}?",
+    ],
+)
+```
+
+## Including Attachments
+
+You can allow users to upload attachments to their messages by passing an
+`allow_attachments` parameter to `mo.ui.chat`.
+
+```python
+mo.ui.chat(
+    rag_model,
+    allow_attachments=["image/png", "image/jpeg"],
+    # or True for any attachment type
+    # allow_attachments=True,
+)
+```
+
+## Built-in Models
+
+marimo provides several built-in AI models that you can use with the chat UI
+element.
+
+### OpenAI
+
+```python
+import marimo as mo
+
+mo.ui.chat(
+    mo.ai.llm.openai(
+        "gpt-4o",
+        system_message="You are a helpful assistant.",
+        api_key="sk-proj-...",
+    ),
+    show_configuration_controls=True
+)
+```
+
+::: marimo.ai.llm.openai
+
+### Anthropic
+
+```python
+import marimo as mo
+
+mo.ui.chat(
+    mo.ai.llm.anthropic(
+        "claude-3-5-sonnet-20240620",
+        system_message="You are a helpful assistant.",
+        api_key="sk-ant-...",
+    ),
+    show_configuration_controls=True
+)
+```
+
+::: marimo.ai.llm.anthropic
+
+### Google AI
+
+```python
+import marimo as mo
+
+mo.ui.chat(
+    mo.ai.llm.google(
+        "gemini-1.5-pro-latest",
+        system_message="You are a helpful assistant.",
+        api_key="AI..",
+    ),
+    show_configuration_controls=True
+)
+
+```
+
+::: marimo.ai.llm.google
+
+### Groq
+
+```python
+import marimo as mo
+
+mo.ui.chat(
+    mo.ai.llm.groq(
+        "llama-3.1-70b-versatile",
+        system_message="You are a helpful assistant.",
+        api_key="gsk-...",
+    ),
+    show_configuration_controls=True
+)
+```
+
+::: marimo.ai.llm.groq
+
+## Types
+
+Chatbots can be implemented with a function that receives a list of
+[`ChatMessage`][marimo.ai.ChatMessage] objects and a
+[`ChatModelConfig`][marimo.ai.ChatModelConfig].
+
+::: marimo.ai.ChatMessage
+
+::: marimo.ai.ChatModelConfig
+
+[`mo.ui.chat`][marimo.ui.chat] can be instantiated with an initial
+configuration with a dictionary conforming to the config.
+
+`ChatMessage`s can also include attachments.
+
+::: marimo.ai.ChatAttachment
+
+## Supported Model Providers
+
+We support any OpenAI-compatible endpoint. If you want any specific provider added explicitly (ones that don't abide by the standard OpenAI API format), you can file a [feature request](https://github.com/marimo-team/marimo/issues/new?template=feature_request.yaml).
+
+Normally, overriding the `base_url` parameter should work. Here are some examples:
+
+/// tab | Cerebras
+
+```python
+chatbot = mo.ui.chat(
+    mo.ai.llm.openai(
+        model="llama3.1-8b",
+        api_key="csk-...", # insert your key here
+        base_url="https://api.cerebras.ai/v1/",
+    ),
+)
+chatbot
+```
+
+///
+
+/// tab | Groq
+
+```python
+chatbot = mo.ui.chat(
+    mo.ai.llm.openai(
+        model="llama-3.1-70b-versatile",
+        api_key="gsk_...", # insert your key here
+        base_url="https://api.groq.com/openai/v1/",
+    ),
+)
+chatbot
+```
+
+///
+
+/// tab | xAI
+
+```python
+chatbot = mo.ui.chat(
+    mo.ai.llm.openai(
+        model="grok-beta",
+        api_key=key, # insert your key here
+        base_url="https://api.x.ai/v1",
+    ),
+)
+chatbot
+```
+
+///
+
+!!! note
+
+    We have added examples for GROQ and Cerebras. These providers offer free API keys and are great for trying out Llama models (from Meta). You can sign up on their platforms and integrate with various AI integrations in marimo easily. For more information, refer to the [AI completion documentation in marimo](../../guides/editor_features/ai_completion.md).
+
+
+
+# Building custom UI elements
+
+Build custom UI plugins that hook into marimo's reactive
+execution engine by using [anywidget](https://anywidget.dev/).
+
+[anywidget](https://anywidget.dev/) is a Python library and specification for
+creating custom Jupyter-compatible widgets. marimo supports anywidget, allowing
+you to import anywidget widgets or create your own custom widgets and use them
+in your notebooks and apps.
+
+## Importing a widget
+
+You can use anywidgets that others have built, such as
+[quak](https://github.com/manzt/quak) or
+[drawdata](https://github.com/koaning/drawdata), directly in marimo.
+
+Here is an example using `drawdata`:
+
+```python
+# pip install drawdata
+from drawdata import ScatterWidget
+
+widget = mo.ui.anywidget(ScatterWidget())
+
+# In another cell, you can access the widget's value
+widget.value
+
+# You can also access the widget's specific properties
+widget.data
+widget.data_as_polars
+```
+
+For additional examples, see
+[our repo](https://github.com/marimo-team/marimo/tree/main/examples/third_party/anywidget).
+
+## Custom widget
+
+```python
+import anywidget
+import traitlets
+import marimo as mo
+
+class CounterWidget(anywidget.AnyWidget):
+  # Widget front-end JavaScript code
+  _esm = """
+    function render({ model, el }) {
+      let getCount = () => model.get("count");
+      let button = document.createElement("button");
+      button.innerHTML = `count is ${getCount()}`;
+      button.addEventListener("click", () => {
+        model.set("count", getCount() + 1);
+        model.save_changes();
+      });
+      model.on("change:count", () => {
+        button.innerHTML = `count is ${getCount()}`;
+      });
+      el.appendChild(button);
+    }
+    export default { render };
+  """
+  _css = """
+    button {
+      padding: 5px !important;
+      border-radius: 5px !important;
+      background-color: #f0f0f0 !important;
+
+      &:hover {
+        background-color: lightblue !important;
+        color: white !important;
+      }
+    }
+  """
+
+  # Stateful property that can be accessed by JavaScript & Python
+  count = traitlets.Int(0).tag(sync=True)
+
+widget = mo.ui.anywidget(CounterWidget())
+
+
+# In another cell, you can access the widget's value
+widget.value
+
+# You can also access the widget's specific properties
+widget.count
+```
+
+---
+
+::: marimo.ui.anywidget
+
+
+
+
+
+# Array
+
+/// marimo-embed
+
+```python
+@app.cell
+def __():
+    wish = mo.ui.text(placeholder="Wish")
+    wishes = mo.ui.array([wish] * 3, label="Three wishes")
+    return
+
+@app.cell
+def __():
+    mo.hstack([wishes, wishes.value], justify="space-between")
+    return
+```
+
+///
+
+::: marimo.ui.array
+
+# Batch
+
+/// marimo-embed
+
+```python
+    @app.cell
+    def __():
+        el = mo.md("{start} → {end}").batch(
+            start=mo.ui.date(label="Start Date"),
+            end=mo.ui.date(label="End Date")
+        )
+        el
+        return
+
+    @app.cell
+    def __():
+        el.value
+        return
+```
+
+///
+
+::: marimo.ui.batch
+
+# Button
+
+!!! tip "Looking for a submit/run button?"
+    If you're looking for a button to trigger computation on click, consider
+    using [`mo.ui.run_button`][marimo.ui.run_button].
+
+
+/// marimo-embed-file
+    filepath: examples/ui/button.py
+///
+
+::: marimo.ui.button
+
+
+# Checkbox
+
+/// marimo-embed
+
+```python
+@app.cell
+def __():
+    checkbox = mo.ui.checkbox(label="check me")
+    return
+
+@app.cell
+def __():
+    mo.hstack([checkbox, mo.md(f"Has value: {checkbox.value}")])
+    return
+```
+
+///
+
+::: marimo.ui.checkbox
+
+
+
+# Code Editor
+
+/// marimo-embed-file
+    filepath: examples/ui/code_editor.py
+///
+
+::: marimo.ui.code_editor
+
+
+# Data Explorer
+
+The data explorer UI element outputs a visual editor explore your data via plotting and intelligent recommendations. You can incrementally build your "main" plot by adding different encodings: x-axis, y-axis, color, size, and shape. As you build your plot, the UI element will suggest further plots by intelligently "exploding" an additional encoding derived from your base plot.
+
+!!! note "Pandas Required"
+
+    In order to use the dataframe UI element, you must have the `pandas` package installed.
+    You can install it with `pip install pandas`.
+
+/// marimo-embed
+    size: large
+    app_width: full
+
+```python
+@app.cell
+def __():
+    import pandas as pd
+    import pyodide
+    csv = pyodide.http.open_url("https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv")
+    df = pd.read_csv(csv)
+    mo.ui.data_explorer(df)
+    return
+```
+
+///
+
+::: marimo.ui.data_explorer
+
+
+# Dataframe
+
+The dataframe UI element outputs a visual editor to apply "transforms" to a dataframe, such as filtering rows, applying group-bys and aggregations, and more. The transformed dataframe is shown below the transform editor. The UI output also includes the generated Python used to generate the resulting dataframe, which you can copy paste into a cell. You can programmatically access the resulting dataframe by accessing the element's `.value` attribute.
+
+!!! note "Pandas or Polars Required"
+
+    In order to use the dataframe UI element, you must have the `pandas` or `polars` package installed.
+    You can install it with `pip install pandas` or `pip install polars`.
+
+Supported transforms are:
+
+- Filter Rows
+- Rename Column
+- Column Conversion
+- Sort Column
+- Group By
+- Aggregate
+
+/// marimo-embed
+    size: large
+    app_width: full
+
+
+```python
+    @app.cell
+    def __():
+        import pandas as pd
+        import pyodide
+        csv = pyodide.http.open_url("https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv")
+        df = pd.read_csv(csv)
+        mo.ui.dataframe(df)
+        return
+```
+
+///
+
+::: marimo.ui.dataframe
+
+
+# Dates
+
+## Single date
+
+/// marimo-embed
+
+```python
+    @app.cell
+    def __():
+        date = mo.ui.date(label="Start Date")
+        return
+
+    @app.cell
+    def __():
+        mo.hstack([date, mo.md(f"Has value: {date.value}")])
+        return
+
+```
+
+///
+
+::: marimo.ui.date
+  :members:
+
+## Date and time
+
+```python
+    @app.cell
+    def __():
+        datetime = mo.ui.datetime(label="Start Date")
+        return
+
+    @app.cell
+    def __():
+        mo.hstack([datetime, mo.md(f"Has value: {datetime.value}")])
+        return
+```
+
+::: marimo.ui.datetime
+  :members:
+
+## Date range
+
+/// marimo-embed
+
+```python
+    @app.cell
+    def __():
+        date_range = mo.ui.date_range(label="Start Date")
+        return
+
+    @app.cell
+    def __():
+        mo.hstack([date_range, mo.md(f"Has value: {date_range.value}")])
+        return
+```
+
+///
+
+::: marimo.ui.date_range
+  :members:
+
+
+# Dictionary
+
+/// marimo-embed
+
+```python
+@app.cell
+def __():
+    first_name = mo.ui.text(placeholder="First name")
+    last_name = mo.ui.text(placeholder="Last name")
+    email = mo.ui.text(placeholder="Email", kind="email")
+
+    dictionary = mo.ui.dictionary(
+        {
+            "First name": first_name,
+            "Last name": last_name,
+            "Email": email,
+        }
+    )
+    return
+@app.cell
+def __():
+    mo.hstack(
+      [dictionary, dictionary.value],
+      justify="space-between"
+    )
+    return
+```
+
+///
+
+::: marimo.ui.dictionary
+
+
+# Dropdown
+
+/// marimo-embed
+
+```python
+@app.cell
+def __():
+    dropdown = mo.ui.dropdown(options=["Apples", "Oranges", "Pears"], label="choose fruit")
+    dropdown_dict = mo.ui.dropdown(options={"Apples":1, "Oranges":2, "Pears":3},
+                            value="Apples", # initial value
+                            label="choose fruit with dict options")
+    return
+
+@app.cell
+def __():
+    mo.vstack([mo.hstack([dropdown, mo.md(f"Has value: {dropdown.value}")]),
+    mo.hstack([dropdown_dict, mo.md(f"Has value: {dropdown_dict.value} and selected_key {dropdown_dict.selected_key}")]),
+                ])
+    return
+```
+
+///
+
+::: marimo.ui.dropdown
+
+
+# File
+
+/// marimo-embed
+
+```python
+@app.cell
+def __():
+    mo.vstack([mo.ui.file(kind="button"), mo.ui.file(kind="area")])
+    return
+```
+
+///
+
+::: marimo.ui.file
+
+
+# File Browser
+
+/// marimo-embed
+
+```python
+    @app.cell
+    def __():
+        mo.vstack([mo.ui.file_browser()])
+        return
+```
+
+///
+
+::: marimo.ui.file_browser
+
+
+# Form
+
+/// marimo-embed
+    size: medium
+
+```python
+@app.cell
+def __():
+    form = mo.ui.text_area(placeholder="...").form()
+    return
+
+@app.cell
+def __():
+    mo.vstack([form, mo.md(f"Has value: {form.value}")])
+    return
+```
+
+///
+
+::: marimo.ui.form
+
+
+# Inputs
+
+marimo comes packaged with interactive UI elements that you can use to build
+powerful notebooks and apps. These elements are available in `marimo.ui`.
+
+| Element | Description |
+|---------|-------------|
+| [`marimo.ui.array`][marimo.ui.array] | Create array inputs |
+| [`marimo.ui.batch`][marimo.ui.batch] | Batch operations |
+| [`marimo.ui.button`][marimo.ui.button] | Create buttons |
+| [`marimo.ui.chat`][marimo.ui.chat] | Create chat interfaces |
+| [`marimo.ui.checkbox`][marimo.ui.checkbox] | Create checkboxes |
+| [`marimo.ui.code_editor`][marimo.ui.code_editor] | Create code editors |
+| [`marimo.ui.dataframe`][marimo.ui.dataframe] | Interactive dataframes |
+| [`marimo.ui.data_explorer`][marimo.ui.data_explorer] | Explore data |
+| [`marimo.ui.date`][marimo.ui.date] | Date picker |
+| [`marimo.ui.datetime`][marimo.ui.datetime] | Date and time picker |
+| [`marimo.ui.date_range`][marimo.ui.date_range] | Date range picker |
+| [`marimo.ui.dictionary`][marimo.ui.dictionary] | Dictionary inputs |
+| [`marimo.ui.dropdown`][marimo.ui.dropdown] | Create dropdowns |
+| [`marimo.ui.file`][marimo.ui.file] | File uploads |
+| [`marimo.ui.file_browser`][marimo.ui.file_browser] | Browse files |
+| [`marimo.ui.form`][marimo.ui.form] | Create forms |
+| [`marimo.ui.microphone`][marimo.ui.microphone] | Record audio |
+| [`marimo.ui.multiselect`][marimo.ui.multiselect] | Multiple selection |
+| [`marimo.ui.number`][marimo.ui.number] | Number inputs |
+| [`marimo.ui.radio`][marimo.ui.radio] | Radio buttons |
+| [`marimo.ui.range_slider`][marimo.ui.range_slider] | Range sliders |
+| [`marimo.ui.refresh`][marimo.ui.refresh] | Refresh buttons |
+| [`marimo.ui.run_button`][marimo.ui.run_button] | Run buttons |
+| [`marimo.ui.slider`][marimo.ui.slider] | Create sliders |
+| [`marimo.ui.switch`][marimo.ui.switch] | Toggle switches |
+| [`marimo.ui.tabs`][marimo.ui.tabs] | Tabbed interfaces |
+| [`marimo.ui.table`][marimo.ui.table] | Interactive tables |
+| [`marimo.ui.text`][marimo.ui.text] | Text inputs |
+| [`marimo.ui.text_area`][marimo.ui.text_area] | Multiline text inputs |
+
+To use a UI element, assign it to a global variable and output it in a cell.
+When you interact with the frontend element, the Python object's `value`
+attribute is automatically updated, and all cells referencing that object
+automatically run with the element's latest value.
+
+## Integrations
+
+| Integration | Description |
+|-------------|-------------|
+| [`marimo.ui.altair_chart`][marimo.ui.altair_chart] | Interactive Altair charts |
+| [`marimo.ui.plotly`][marimo.ui.plotly] | Interactive Plotly charts |
+| [`marimo.mpl.interactive`][marimo.mpl.interactive] | Interactive Matplotlib plots |
+| [`marimo.ui.anywidget`][marimo.ui.anywidget] | Custom widgets |
+
+
+# Multiselect
+
+/// marimo-embed
+
+```python
+@app.cell
+def __():
+    options = ["Apples", "Oranges", "Pears"]
+    multiselect = mo.ui.multiselect(options=options)
+    return
+
+@app.cell
+def __():
+    mo.hstack([multiselect, mo.md(f"Has value: {multiselect.value}")])
+    return
+```
+
+///
+
+::: marimo.ui.multiselect
+
+
+# Navigation Menu
+
+/// marimo-embed
+    size: large
+
+```python
+@app.cell
+def __():
+    nav_menu = mo.nav_menu({
+        "/overview": "Overview",
+        "Sales": {
+            "/sales": {
+                "label": "Sales",
+                "description": "View sales and revenue",
+            },
+            "/sales/invoices": {
+                "label": "Invoices",
+                "description": "View invoices and payments",
+            },
+            "/sales/customers": {
+                "label": "Customers",
+                "description": "View customers and subscriptions",
+            },
+        },
+        "Products": {
+            "/products": {
+                "label": "Products",
+                "description": "View and manage products",
+            },
+            "/products/inventory": {
+                "label": "Inventory",
+                "description": "View inventory and stock levels",
+            },
+            "/products/categories": {
+                "label": "Categories",
+                "description": "View categories and products",
+            },
+        },
+    })
+    nav_menu
+    return
+```
+
+///
+
+::: marimo.nav_menu
+
+
+# Number
+
+/// marimo-embed
+
+```python
+@app.cell
+def __():
+    number = mo.ui.number(start=1, stop=20, label="Number")
+    return
+
+@app.cell
+def __():
+    mo.hstack([number, mo.md(f"Has value: {number.value}")])
+    return
+```
+
+///
+
+::: marimo.ui.number
+
+
+# Radio
+
+/// marimo-embed
+
+```python
+@app.cell
+def __():
+    options = ["Apples", "Oranges", "Pears"]
+    radio = mo.ui.radio(options=options)
+    return
+
+@app.cell
+def __():
+    mo.hstack([radio, mo.md(f"Has value: {radio.value}")])
+    return
+```
+
+///
+
+::: marimo.ui.radio
+
+
+# Range Slider
+
+/// marimo-embed
+
+```python
+@app.cell
+def __():
+    range_slider = mo.ui.range_slider(start=1, stop=10, step=2, value=[2, 6], full_width=True)
+    return
+
+@app.cell
+def __():
+    mo.hstack([range_slider, mo.md(f"Has value: {range_slider.value}")])
+    return
+```
+
+///
+
+::: marimo.ui.range_slider
+
+
+# Refresh
+
+/// marimo-embed
+
+```python
+@app.cell
+def __():
+    refresh = mo.ui.refresh(
+      label="Refresh",
+      options=["1s", "5s", "10s", "30s"]
+    )
+    return
+
+@app.cell
+def __():
+    mo.hstack([refresh, refresh.value])
+    return
+```
+
+///
+
+::: marimo.ui.refresh
+
+
+# Run Button
+
+/// marimo-embed-file
+    filepath: examples/ui/run_button.py
+///
+
+::: marimo.ui.run_button
+
+
+# Slider
+
+/// marimo-embed
+
+```python
+@app.cell
+def __():
+    slider = mo.ui.slider(start=1, stop=20, label="Slider", value=3)
+    return
+
+@app.cell
+def __():
+    mo.hstack([slider, mo.md(f"Has value: {slider.value}")])
+    return
+
+@app.cell
+def __():
+    # You can also use steps to create a slider on a custom range
+    log_slider = mo.ui.slider(steps=np.logspace(-2, 2, 101), label="Logarithmic Slider", value=1)
+    return
+
+@app.cell
+def __():
+    mo.hstack([log_slider, mo.md(f"Has value: {log_slider.value}")])
+    return
+
+@app.cell
+def __():
+    import numpy as np
+    return
+```
+
+///
+
+::: marimo.ui.slider
+
+
+# Switch
+
+/// marimo-embed
+
+```python
+@app.cell
+def __():
+    switch = mo.ui.switch(label="do not disturb")
+    return
+
+@app.cell
+def __():
+    mo.hstack([switch, mo.md(f"Has value: {switch.value}")])
+    return
+```
+
+///
+
+::: marimo.ui.switch
+
+
+# Table
+
+/// marimo-embed
+    size: large
+
+```python
+    @app.cell
+    def __():
+        table = mo.ui.table(data=office_characters, pagination=True)
+        return
+
+    @app.cell
+    def __():
+        mo.vstack([table, table.value])
+        return
+
+    @app.cell
+    def __():
+        office_characters = [
+            {"first_name": "Michael", "last_name": "Scott"},
+            {"first_name": "Jim", "last_name": "Halpert"},
+            {"first_name": "Pam", "last_name": "Beesly"},
+            {"first_name": "Dwight", "last_name": "Schrute"},
+            {"first_name": "Angela", "last_name": "Martin"},
+            {"first_name": "Kevin", "last_name": "Malone"},
+            {"first_name": "Oscar", "last_name": "Martinez"},
+            {"first_name": "Stanley", "last_name": "Hudson"},
+            {"first_name": "Phyllis", "last_name": "Vance"},
+            {"first_name": "Meredith", "last_name": "Palmer"},
+            {"first_name": "Creed", "last_name": "Bratton"},
+            {"first_name": "Ryan", "last_name": "Howard"},
+            {"first_name": "Kelly", "last_name": "Kapoor"},
+            {"first_name": "Toby", "last_name": "Flenderson"},
+            {"first_name": "Darryl", "last_name": "Philbin"},
+            {"first_name": "Erin", "last_name": "Hannon"},
+            {"first_name": "Andy", "last_name": "Bernard"},
+            {"first_name": "Jan", "last_name": "Levinson"},
+            {"first_name": "David", "last_name": "Wallace"},
+            {"first_name": "Holly", "last_name": "Flax"},
+        ]
+        return
+```
+
+///
+
+::: marimo.ui.table
+
+
+# Tabs
+
+/// marimo-embed
+    size: large
+
+```python
+@app.cell
+def __():
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    # Generate some random data
+    categories = ["A", "B", "C", "D", "E"]
+    values = np.random.rand(5)
+
+    bar = plt.bar(categories, values)
+    plt.title("Random Bar Chart")
+    plt.xlabel("Categories")
+    plt.ylabel("Values")
+    def simple_echo_model(messages, config):
+        return f"You said: {messages[-1].content}"
+
+    chat = mo.ui.chat(
+        simple_echo_model,
+        prompts=["Hello", "How are you?"],
+        show_configuration_controls=True
+    )
+    None
+    return
+
+@app.cell
+def __():
+    mo.ui.tabs(
+        {
+            "📈 Sales": bar,
+            "📊 Chatbot": chat,
+            "💻 Settings": mo.ui.text(placeholder="Key"),
+        }
+    )
+    return
+```
+
+///
+
+::: marimo.ui.tabs
+
+
+# Text
+
+/// marimo-embed
+
+```python
+@app.cell
+def __():
+    text = mo.ui.text(placeholder="Search...", label="Filter")
+    return
+
+@app.cell
+def __():
+    mo.hstack([text, mo.md(f"Has value: {text.value}")])
+    return
+```
+
+///
+
+::: marimo.ui.text
+
+
+# Text Area
+
+/// marimo-embed-file
+    filepath: examples/ui/text_area.py
+///
+
+::: marimo.ui.text_area
+
+
+# Callout
+
+/// marimo-embed
+
+```python
+@app.cell
+def __():
+    callout_kind = mo.ui.dropdown(
+        label="Color",
+        options=["info", "neutral", "danger", "warn", "success"],
+        value="neutral",
+    )
+    return
+
+@app.cell
+def __():
+    callout = mo.callout("This is a callout", kind=callout_kind.value)
+    return
+
+@app.cell
+def __():
+    mo.vstack([callout_kind, callout], align="stretch", gap=0)
+    return
+```
+
+///
+
+::: marimo.callout
+
+
+# Accordion
+
+/// marimo-embed
+    size: medium
+
+```python
+@app.cell
+def __():
+    mo.accordion(
+        {
+            "Door 1": mo.md("Nothing!"),
+            "Door 2": mo.md("Nothing!"),
+            "Door 3": mo.md(
+                "![goat](https://images.unsplash.com/photo-1524024973431-2ad916746881)"
+            ),
+        }
+    )
+    return
+```
+
+///
+
+::: marimo.accordion
+
+
+# Layouts
+
+marimo has higher-order layout functions that you can use to arrange outputs
+in rows, columns, tables, tabs, and more.
+
+## Stateless
+
+Unlike elements in `marimo.ui`, these don't have any values associated with
+them but just render their children in a certain way.
+
+| Function | Description |
+|----------|-------------|
+| [`marimo.accordion`][marimo.accordion] | Create collapsible sections |
+| [`marimo.carousel`][marimo.carousel] | Create a slideshow |
+| [`marimo.callout`][marimo.callout] | Create highlighted sections |
+| [`marimo.center`][marimo.center] | Center content |
+| [`marimo.hstack`][marimo.hstack] | Stack elements horizontally |
+| [`marimo.lazy`][marimo.lazy] | Lazy load content |
+| [`marimo.left`][marimo.left] | Left-align content |
+| [`marimo.nav_menu`][marimo.nav_menu] | Create navigation menus |
+| [`marimo.plain`][marimo.plain] | Display content without styling |
+| [`marimo.right`][marimo.right] | Right-align content |
+| [`marimo.routes`][marimo.routes] | Create page routing |
+| [`marimo.sidebar`][marimo.sidebar] | Create sidebars |
+| [`marimo.tree`][marimo.tree] | Create tree structures |
+| [`marimo.vstack`][marimo.vstack] | Stack elements vertically |
+
+## Stateful
+
+Some elements in `marimo.ui` are also helpful for layout. These elements
+do have values associated with them: for example, `tabs` tracks the
+selected tab name, and `table` tracks the selected rows.
+
+| Function | Description |
+|----------|-------------|
+| [`marimo.ui.tabs`][marimo.ui.tabs] | Create tabbed interfaces |
+| [`marimo.ui.table`][marimo.ui.table] | Create interactive tables |
+
+
+# Carousel
+
+/// marimo-embed
+    size: large
+
+```python
+@app.cell
+def __():
+    mo.carousel([
+        mo.md("# Introduction"),
+        "By the marimo team",
+        mo.md("## What is marimo?"),
+        mo.md("![marimo moss ball](https://marimo.io/logo.png)"),
+        mo.md("## Questions?"),
+    ])
+    return
+```
+
+///
+
+::: marimo.carousel
+
+
+# Layouts
+
+marimo has higher-order layout functions that you can use to arrange outputs
+in rows, columns, tables, tabs, and more.
+
+## Stateless
+
+Unlike elements in `marimo.ui`, these don't have any values associated with
+them but just render their children in a certain way.
+
+| Function | Description |
+|----------|-------------|
+| [`marimo.accordion`][marimo.accordion] | Create collapsible sections |
+| [`marimo.carousel`][marimo.carousel] | Create a slideshow |
+| [`marimo.callout`][marimo.callout] | Create highlighted sections |
+| [`marimo.center`][marimo.center] | Center content |
+| [`marimo.hstack`][marimo.hstack] | Stack elements horizontally |
+| [`marimo.lazy`][marimo.lazy] | Lazy load content |
+| [`marimo.left`][marimo.left] | Left-align content |
+| [`marimo.nav_menu`][marimo.nav_menu] | Create navigation menus |
+| [`marimo.plain`][marimo.plain] | Display content without styling |
+| [`marimo.right`][marimo.right] | Right-align content |
+| [`marimo.routes`][marimo.routes] | Create page routing |
+| [`marimo.sidebar`][marimo.sidebar] | Create sidebars |
+| [`marimo.tree`][marimo.tree] | Create tree structures |
+| [`marimo.vstack`][marimo.vstack] | Stack elements vertically |
+
+## Stateful
+
+Some elements in `marimo.ui` are also helpful for layout. These elements
+do have values associated with them: for example, `tabs` tracks the
+selected tab name, and `table` tracks the selected rows.
+
+| Function | Description |
+|----------|-------------|
+| [`marimo.ui.tabs`][marimo.ui.tabs] | Create tabbed interfaces |
+| [`marimo.ui.table`][marimo.ui.table] | Create interactive tables |
+
+
+# Justify
+
+::: marimo.center
+
+::: marimo.left
+
+::: marimo.right
+
+
+# Lazy
+
+/// marimo-embed
+
+```python
+@app.cell
+def __():
+    mo.accordion({
+        "Open me": mo.lazy(expensive_number, show_loading_indicator=True)
+    })
+    return
+
+@app.cell
+def __():
+    import time
+    import random
+
+    def expensive_number():
+        time.sleep(1)
+        num = random.randint(0, 100)
+        return num
+    return
+```
+
+///
+
+::: marimo.lazy
+
+
+# Plain
+
+::: marimo.plain
+
+
+# Routes
+
+::: marimo.routes
+python
+import marimo
+
+app = marimo.App()
+
+@app.cell
+def __():
+   import marimo as mo
+   return
+
+
+@app.cell
+def __():
+    mo.sidebar(
+        [
+            mo.md("# marimo"),
+            mo.nav_menu(
+                {
+                    "#/": f"{mo.icon('lucide:home')} Home",
+                    "#/about": f"{mo.icon('lucide:user')} About",
+                    "#/contact": f"{mo.icon('lucide:phone')} Contact",
+                    "Links": {
+                        "https://twitter.com/marimo_io": "Twitter",
+                        "https://github.com/marimo-team/marimo": "GitHub",
+                    },
+                },
+                orientation="vertical",
+            ),
+        ]
+    )
+    return
+
+@app.cell
+def __():
+    mo.routes({
+        "#/": mo.md("# Home"),
+        "#/about": mo.md("# About"),
+        "#/contact": mo.md("# Contact"),
+        mo.routes.CATCH_ALL: mo.md("# Home"),
+    })
+    return
+
+
+# Sidebar
+
+/// marimo-embed
+    size: medium
+
+```python
+@app.cell
+def __():
+    mo.sidebar(
+        [
+            mo.md("# marimo"),
+            mo.nav_menu(
+                {
+                    "#/home": f"{mo.icon('lucide:home')} Home",
+                    "#/about": f"{mo.icon('lucide:user')} About",
+                    "#/contact": f"{mo.icon('lucide:phone')} Contact",
+                    "Links": {
+                        "https://twitter.com/marimo_io": "Twitter",
+                        "https://github.com/marimo-team/marimo": "GitHub",
+                    },
+                },
+                orientation="vertical",
+            ),
+        ]
+    )
+    return
+```
+
+///
+
+::: marimo.sidebar
+
+
+# Stacks
+
+/// marimo-embed
+    size: large
+
+```python
+@app.cell
+def __():
+    def create_box(num=1):
+        box_size = 30 + num * 10
+        return mo.Html(
+            f"<div style='min-width: {box_size}px; min-height: {box_size}px; background-color: orange; text-align: center; line-height: {box_size}px'>{str(num)}</div>"
+        )
+
+
+
+
+    boxes = [create_box(i) for i in range(1, 5)]
+    return
+
+@app.cell
+def __():
+    justify = mo.ui.dropdown(
+        ["start", "center", "end", "space-between", "space-around"],
+        value="space-between",
+        label="justify",
+    )
+    align = mo.ui.dropdown(
+        ["start", "center", "end", "stretch"], value="center", label="align"
+    )
+    gap = mo.ui.number(start=0, step=0.25, stop=2, value=0.25, label="gap")
+    wrap = mo.ui.checkbox(label="wrap")
+    return
+
+@app.cell
+def __():
+    horizontal = mo.hstack(
+        boxes,
+        align=align.value,
+        justify=justify.value,
+        gap=gap.value,
+        wrap=wrap.value,
+    )
+    vertical = mo.vstack(
+        boxes,
+        align=align.value,
+        gap=gap.value,
+    )
+
+    mo.vstack(
+        [
+            mo.hstack([justify, align, gap], justify="center"),
+            horizontal,
+            mo.md("-----------------------------"),
+            vertical,
+        ],
+        align="stretch",
+        gap=1,
+    )
+    return
+```
+
+///
+
+::: marimo.hstack
+
+::: marimo.vstack
+
+
+# Tree
+
+/// marimo-embed
+
+```python
+@app.cell
+def __():
+    mo.tree(
+        ["entry", "another entry", {"key": [0, mo.ui.slider(1, 10, value=5), 2]}],
+        label="A tree of elements.",
+    )
+    return
+```
+
+///
+
+::: marimo.tree
+
+# Caching
+
+marimo comes with utilities to cache intermediate computations. These utilities
+come in two types: caching the return values of expensive functions in memory,
+and caching the values of variables to disk.
+
+## Caching expensive functions
+
+Use [`mo.cache`][marimo.cache] to cache the return values of functions in
+memory, based on the function arguments, closed-over values, and the notebook
+code defining the function.
+
+The resulting cache is similar to `functools.cache`, but with the benefit that
+[`mo.cache`][marimo.cache] won't return stale values (because it keys on
+closed-over values) and isn't invalidated when the cell defining the decorated
+function is simply re-run (because it keys on notebook code). This means that
+like marimo notebooks, [`mo.cache`][marimo.cache] has no hidden state
+associated with the cached function, which makes you more productive while developing iteratively.
+
+For a cache with bounded size, use [`mo.lru_cache`][marimo.lru_cache].
+
+::: marimo.cache
+::: marimo.lru_cache
+
+## Caching variables to disk
+
+Use [`mo.persistent_cache`][marimo.persistent_cache] to cache variables computed in an expensive block of
+code to disk. The next time this block of code is run, if marimo detects a
+cache hit, the code will be skipped and your variables will be loaded into
+memory, letting you pick up where you left off.
+
+!!! tip "Cache location"
+    By default, caches are stored in `__marimo__/cache/`, in the directory of the
+    current notebook. For projects versioned with `git`, consider adding
+    `**/__marimo__/cache/` to your `.gitignore`.
+
+::: marimo.persistent_cache
+
+
+# Control flow
+
+Use `mo.stop` to halt execution of a cell, and optionally output an object.
+This function is useful for validating user input.
+
+::: marimo.stop
+
+Use [`mo.ui.refresh`][marimo.ui.refresh] to trigger other cells to run periodically, on a configurable
+interval (or on click).
+
+
+# Diagrams
+
+/// marimo-embed
+    size: medium
+
+```python
+@app.cell
+def __():
+    mo.mermaid("graph TD\n  A[Christmas] -->|Get money| B(Go shopping)\n  B --> C{Let me think}\n  C -->|One| D[Laptop]\n  C -->|Two| E[iPhone]\n  C -->|Three| F[Car]")
+    return
+```
+
+///
+
+## Mermaid diagrams
+
+::: marimo.mermaid
+
+
+# HTML
+
+All marimo elements extend the HTML element class.
+
+::: marimo.as_html
+
+::: marimo.Html
+
+::: marimo.iframe
+
+
+# API Reference
+
+Use the marimo library in marimo notebooks (`import marimo as mo`) to
+
+- connect interactive inputs like sliders, dropdowns, and tables to Python,
+- express yourself with dynamically created markdown,
+- layout information with tabs or grids,
+- output media like images and audio,
+- and more!
+
+|                      |                                                           |
+| :------------------- | :-------------------------------------------------------- |
+| [markdown](markdown.md)      | Write markdown with `mo.md`                               |
+| [inputs](inputs/index.md)  | Connect sliders, dropdowns, tables, and more to Python    |
+| [layouts](layouts/index.md) | Customize outputs with accordions, tabs, stacks, and more |
+| [plotting](plotting.md)      | Output interactive plots                                  |
+| [media](media/index.md)   | Output media like images, audio, PDFs, and plain text     |
+| [diagrams](diagrams.md)      | Flow charts, graphs, statistic cards, and more            |
+| [status](status.md)        | Display progress indicators                               |
+| [outputs](outputs.md)       | Modify cell outputs, redirect console output              |
+| [control_flow](control_flow.md)  | Control how cells execute                                 |
+| [html](html.md)          | Manipulate HTML objects                                   |
+| [query_params](query_params.md)  | Access and set query parameters with `mo.query_params`    |
+| [cli_args](cli_args.md)      | Access command-line arguments with `mo.cli_args`          |
+| [caching](caching.md)       | Cache expensive computations in memory or on disk         |
+| [state](state.md)         | Synchronize multiple UI elements with `mo.state`          |
+| [app](app.md)           | Embed notebooks in other notebooks                        |
+| [cell](cell.md)          | Run cells defined in another notebook                     |
+| [miscellaneous](miscellaneous.md) | Miscellaneous utilities                                   |
+
+
+# Markdown
+
+Write markdown with `mo.md`; make your markdown **interactive**, **dynamic**,
+and **visually rich** by interpolating arbitrary Python values and marimo
+elements.
+
+::: marimo.md
+
+## Loading LaTeX macros
+
+You can load LaTeX macros using `mo.latex(filename=...)`.
+
+::: marimo.latex
+
+!!! warning "Side effects"
+    The `mo.latex()` function has side effects (registering the LaTeX macros) and should be used in the same cell as `import marimo`. Otherwise, the LaTeX macros may not be loaded before the cells that use them.
+
+## Icons
+
+We support rendering icons from [Iconify](https://icon-sets.iconify.design/).
+
+When is inside markdown, you can render an icon with the syntax `::iconset:icon-name::` for example `::lucide:rocket::` or `::mdi:home::`. This is useful for quickly adding an icon, however, it does not support advanced configuration such as size, color, and rotation.
+
+For other advanced features, use `mo.icon()` such as `mo.icon("lucide:rocket", size=20)` or `mo.icon("mdi:home", color="blue")`.
+
+::: marimo.icon
+
+## Tooltips
+
+You can render a tooltip by adding the `data-tooltip` attribute to an element.
+
+```python
+mo.md(
+    '''
+    <div data-tooltip="This is a tooltip">Hover over me</div>
+    '''
+)
+mo.ui.button(
+    label='<div data-tooltip="This is a tooltip">Hover over me</div>'
+)
+```
+
+## Rendering images
+
+You can render images from a local `public/` folder:
+
+```python
+mo.md(
+    '''
+    <img src="public/image.png" width="100" />
+    '''
+)
+```
+
+See [Static files](../guides/outputs.md#static-files) for information about serving images and other static assets.
+
+
+# Outputs
+
+## Cell outputs
+
+!!! note "Cell outputs"
+    Every cell in a marimo notebook can have a visual **output**. When editing,
+    outputs are displayed above cells. When running a notebook as an app,
+    its UI is an arrangement of outputs.
+
+    A cell's output is by default its last expression. You can also create outputs
+    programmatically, using `mo.output.replace()` and `mo.output.append()`.
+
+::: marimo.output.replace
+::: marimo.output.append
+
+::: marimo.output.clear
+::: marimo.output.replace_at_index
+
+!!! warning "Last expression replaces existing output"
+    Ending a cell with a non-`None` expression is the same as calling
+    `mo.output.replace()` on it: the last expression replaces any output you may have
+    already written. Wrap the last expression in `mo.output.append` if you want
+    to add to an existing output instead of replacing it.
+
+### Display cell code in marimo's app views
+
+Use `mo.show_code()` to display the cell's code in the output area, which
+will then be visible in all app views.
+
+::: marimo.show_code
+
+## Console outputs
+
+/// admonition | Console outputs
+    type: note
+
+Text written to `stdout`/`stderr`, including print statements
+and logs, shows up in a console output area below a cell.
+
+By default, these console outputs don't appear when running a marimo notebook
+as an app. If you do want them to appear in apps, marimo provides utility
+functions for capturing console outputs and redirecting them to cell outputs.
+///
+
+::: marimo.redirect_stdout
+
+::: marimo.redirect_stderr
+::: marimo.capture_stdout
+
+::: marimo.capture_stderr
+
+
+# Plotting
+
+marimo supports most major plotting libraries, including Matplotlib, Seaborn,
+Plotly, and Altair. Just import your plotting library of choice and use it
+as you normally would.
+
+For more information about plotting, see the [plotting guide](../guides/working_with_data/plotting.md).
+
+## Reactive charts with Altair
+
+/// marimo-embed
+    size: large
+
+```python
+@app.cell
+async def __():
+    import pandas as pd
+    import pyodide
+    import micropip
+    import json
+    await micropip.install('altair')
+    import altair as alt
+    return
+
+@app.cell
+def __():
+    cars = pd.DataFrame(json.loads(
+      pyodide.http.open_url('https://vega.github.io/vega-datasets/data/cars.json').read()
+    ))
+
+    chart = mo.ui.altair_chart(alt.Chart(cars).mark_point().encode(
+        x='Horsepower',
+        y='Miles_per_Gallon',
+        color='Origin'
+    ))
+    return
+
+@app.cell
+def __():
+    mo.vstack([chart, mo.ui.table(chart.value)])
+    return
+```
+
+///
+
+### Disabling automatic selection
+
+marimo automatically adds a default selection based on the mark type, however, you may want to customize the selection behavior of your Altair chart. You can do this by setting `chart_selection` and `legend_selection` to `False`, and using `.add_params` directly on your Altair chart.
+
+```python
+# Create an interval selection
+brush = alt.selection_interval(encodings=["x"])
+
+_chart = (
+    alt.Chart(traces, height=150)
+    .mark_line()
+    .encode(x="index:Q", y="value:Q", color="traces:N")
+    .add_params(brush) # add the selection to the chart
+)
+
+chart = mo.ui.altair_chart(
+    _chart,
+    # disable automatic selection
+    chart_selection=False,
+    legend_selection=False
+)
+chart # You can now access chart.value to get the selected data
+```
+
+::: marimo.ui.altair_chart
+
+### Performance and Data Transformers
+
+Altair has a concept of [data](https://altair-viz.github.io/user_guide/data_transformers.html) transformers, which can be used to improve performance.
+
+Such examples are:
+
+- pandas Dataframe has to be sanitized and serialized to JSON.
+- The rows of a Dataframe might need to be sampled or limited to a maximum number.
+- The Dataframe might be written to a `.csv` or `.json` file for performance reasons.
+
+By default, Altair uses the `default` data transformer, which is the slowest in marimo. It is limited to 5000 rows (although we increase this to `20_000` rows as marimo can handle this). This includes the data inside the HTML that is being sent over the network, which can also be limited by marimo's maximum message size.
+
+It is recommended to use the `marimo_csv` data transformer, which is the most performant and can handle the largest datasets: it converts the data to a CSV file which is smaller and can be sent over the network. This can handle up to +400,000 rows with no issues.
+
+When using `mo.ui.altair_chart`, we automatically set the data transformer to `marimo_csv` for you. If you are using Altair directly, you can set the data transformer using the following code:
+
+```python
+import altair as alt
+alt.data_transformers.enable('marimo_csv')
+```
+
+## Reactive plots with Plotly
+
+!!! warning "mo.ui.plotly only supports scatter plots, treemaps charts, and sunbursts charts."
+    marimo can render any Plotly plot, but [`mo.ui.plotly`][marimo.ui.plotly] only
+    supports reactive selections for scatter plots, treemaps charts, and sunbursts charts. If you require other kinds of
+    selection, consider using [`mo.ui.altair_chart`][marimo.ui.altair_chart].
+
+::: marimo.ui.plotly
+
+## Interactive matplotlib
+
+::: marimo.mpl.interactive
+    options:
+      show_root_heading: true
+      show_source: true
+
+## Leafmap support
+
+marimo supports rendering [Leafmap](https://leafmap.org/) maps using the `folium` and `plotly` backends.
+
+## Other plotting libraries
+
+You can use all the popular plotting libraries with marimo. Such as:
+
+- [Matplotlib](https://matplotlib.org/)
+- [Plotly](https://plotly.com/)
+- [Seaborn](https://seaborn.pydata.org/)
+- [Bokeh](https://bokeh.org/)
+- [Altair](https://altair-viz.github.io/)
+- [HoloViews](http://holoviews.org/)
+- [hvPlot](https://hvplot.holoviz.org/)
+- [Leafmap](https://leafmap.org/)
+- [Pygwalker](https://kanaries.net/pygwalker)
+
+
+# Status
+
+Use progress bars or spinners to visualize loading status in your notebooks and
+apps. Useful when iterating over collections or loading data from files,
+databases, or APIs.
+
+## Progress bar
+
+You can display a progress bar while iterating over a collection, similar
+to `tqdm`.
+
+/// marimo-embed
+    size: medium
+
+```python
+@app.cell
+def __():
+    rerun = mo.ui.button(label="Rerun")
+    rerun
+    return
+
+@app.cell
+async def __():
+    import asyncio
+    rerun
+    for _ in mo.status.progress_bar(
+        range(10),
+        title="Loading",
+        subtitle="Please wait",
+        show_eta=True,
+        show_rate=True
+    ):
+        await asyncio.sleep(0.5)
+    return
+```
+
+///
+
+::: marimo.status.progress_bar
+
+## Spinner
+
+/// marimo-embed
+    size: medium
+
+```python
+@app.cell
+def __():
+    rerun = mo.ui.button(label="Rerun")
+    rerun
+    return
+
+@app.cell
+async def __():
+    import asyncio
+    rerun
+    with mo.status.spinner(title="Loading...") as _spinner:
+        await asyncio.sleep(1)
+        _spinner.update("Almost done")
+        await asyncio.sleep(1)
+        _spinner.update("Done")
+    return
+```
+
+///
+
+::: marimo.status.spinner
+
+
