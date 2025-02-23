@@ -1,5 +1,5 @@
 import typer
-from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
 from langchain.prompts import ChatPromptTemplate
 import os
 from phoenix.otel import register
@@ -175,7 +175,7 @@ Also remember there's no mo.ai! You have to use langchain!
 
 Here's some examples of how to get set up with langchain
 
-llm = ChatOpenAI(model="o1", api_key=apikey)
+llm = ChatAnthropic(model="claude-3-5-sonnet-20241022", anthropic_api_key=apikey)
 
 planning_chain = (
     ChatPromptTemplate.from_template(planning_template) | llm | StrOutputParser()
@@ -218,16 +218,18 @@ INPUT_TEMPLATE = """{marimo_info}. The user wants to create this kind of ai agen
 Think about what the ai agent will need to input, and create the given variables/inputs that they will need.
 The input should be stored in variables that will be used later. Remember, you have to both create the dot text values, and then the marimo cells that render the requested input items.
 The rendered input items should be in a marimo hstack.
+Limit yourself to around 3 or so variables. and clearly comment and explain what each variable is for.
 Only return the Python code, no explanations."""
 
-ANALYSIS_TEMPLATE = """{marimo_info}. Create a marimo cell that uses the following user input variables: {input_vars}
+ANALYSIS_TEMPLATE = """{marimo_info}. Create a marimo cell that uses the above variables
 to analyze and process data using an LLM with this goal: "{goal}"
+Be sure to use claude anthropic 3.5 sonnet! The api key only uses the anthropic api.
 Remember to get the value from the previously created marimo text inputs, you have to call .value on the text input variable.
+Only use the variables you were provided, and make sure the analysis processes into a series of clear specific variables, and explains each one with comments.
 Only return the Python code, no explanations."""
 
 OUTPUT_TEMPLATE = """{marimo_info}. Create a marimo cell that takes the analysis results and formats them 
 in a clear, visually appealing way using marimo's display capabilities.
-The variables to display are: {output_vars}
 Only return the Python code, no explanations."""
 
 
@@ -247,14 +249,14 @@ def main(prompt: str, apikey: str, projectname: str):
     This is a CLI that generates a marimo app from a prompt.
     """
     # Initialize the LLM
-    llm = ChatOpenAI(model="o1", api_key=apikey)
+    llm = ChatAnthropic(model="claude-3-5-sonnet-20241022", anthropic_api_key=apikey)
 
     # First, analyze the user's prompt to determine the required components
     planning_template = """Given this prompt for an AI agent: {prompt}
     Return a JSON object with these fields:
-    - input_vars: list of required input variables
     - analysis_goal: specific goal for the analysis section
-    - output_vars: list of variables to display in the results"""
+
+    Only return the JSON object, no explanations."""
 
     planning_chain = (
         ChatPromptTemplate.from_template(planning_template) | llm | StrOutputParser()
@@ -274,7 +276,6 @@ def main(prompt: str, apikey: str, projectname: str):
     analysis_section = create_marimo_section(
         llm,
         ANALYSIS_TEMPLATE,
-        input_vars=plan["input_vars"],
         goal=plan["analysis_goal"],
         marimo_info=general_marimo_info_instructions,
         preceding_code=input_section,
@@ -283,7 +284,6 @@ def main(prompt: str, apikey: str, projectname: str):
     output_section = create_marimo_section(
         llm,
         OUTPUT_TEMPLATE,
-        output_vars=plan["output_vars"],
         marimo_info=general_marimo_info_instructions,
         preceding_code=input_section + analysis_section,
     )
