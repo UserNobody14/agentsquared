@@ -180,7 +180,7 @@ llm = ChatAnthropic(model="claude-3-5-sonnet-20241022", anthropic_api_key=apikey
 planning_chain = (
     ChatPromptTemplate.from_template(planning_template) | llm | StrOutputParser()
 )
-plan_response = planning_chain.invoke({"prompt": prompt})
+plan_response = planning_chain.invoke({"myvar1": myvalue1, "myvar2": myvalue2, "myvar3": myvalue3})
 
 prompt = ChatPromptTemplate.from_template(template)
 chain = prompt | llm | StrOutputParser()
@@ -189,6 +189,10 @@ response = chain.invoke(kwargs)
 
 
 Use the environment variable API_KEY for the api key.
+You can get the api key via the following code:
+
+import os
+anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY")
 
 
 
@@ -225,7 +229,9 @@ ANALYSIS_TEMPLATE = """{marimo_info}. Create a marimo cell that uses the above v
 to analyze and process data using an LLM with this goal: "{goal}"
 Be sure to use claude anthropic 3.5 sonnet! The api key only uses the anthropic api.
 Remember to get the value from the previously created marimo text inputs, you have to call .value on the text input variable.
+Use the ai to process the data and output a json for the next phase.
 Only use the variables you were provided, and make sure the analysis processes into a series of clear specific variables, and explains each one with comments.
+
 Only return the Python code, no explanations."""
 
 OUTPUT_TEMPLATE = """{marimo_info}. Create a marimo cell that takes the analysis results and formats them 
